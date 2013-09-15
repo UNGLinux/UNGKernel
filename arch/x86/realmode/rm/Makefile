@@ -19,6 +19,14 @@ wakeup-objs	+= video-vga.o
 wakeup-objs	+= video-vesa.o
 wakeup-objs	+= video-bios.o
 
+# For clang, we need to enforce not to use the integrated assembler
+AFLAGS_wakeup_asm.o	= $(call cc-option,-no-integrated-as,)
+AFLAGS_bioscall.o	= $(call cc-option,-no-integrated-as,)
+AFLAGS_copy.o		= $(call cc-option,-no-integrated-as,)
+AFLAGS_trampoline_32.o	= $(call cc-option,-no-integrated-as,)
+AFLAGS_trampoline_64.o	= $(call cc-option,-no-integrated-as,)
+AFLAGS_reboot_32.o	= $(call cc-option,-no-integrated-as,)
+
 realmode-y			+= header.o
 realmode-y			+= trampoline_$(BITS).o
 realmode-y			+= stack.o
@@ -70,13 +78,14 @@ KBUILD_CFLAGS	:= $(LINUXINCLUDE) -m32 -g -Os -D_SETUP -D__KERNEL__ -D_WAKEUP \
 		   -I$(srctree)/arch/x86/boot \
 		   -DDISABLE_BRANCH_PROFILING \
 		   -Wall -Wstrict-prototypes \
-		   -march=i386 -mregparm=3 \
+		   -march=i586 -mregparm=3 \
 		   -include $(srctree)/$(src)/../../boot/code16gcc.h \
 		   -fno-strict-aliasing -fomit-frame-pointer -fno-pic \
 		   $(call cc-option, -ffreestanding) \
 		   $(call cc-option, -fno-toplevel-reorder,\
 			$(call cc-option, -fno-unit-at-a-time)) \
 		   $(call cc-option, -fno-stack-protector) \
-		   $(call cc-option, -mpreferred-stack-boundary=2)
+		   $(call cc-option, -mpreferred-stack-boundary=2) \
+		   $(call cc-option,-no-integrated-as,)
 KBUILD_AFLAGS	:= $(KBUILD_CFLAGS) -D__ASSEMBLY__
 GCOV_PROFILE := n

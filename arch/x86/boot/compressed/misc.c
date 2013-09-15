@@ -109,8 +109,8 @@ static void error(char *m);
  */
 struct boot_params *real_mode;		/* Pointer to real-mode data */
 
-void *memset(void *s, int c, size_t n);
-void *memcpy(void *dest, const void *src, size_t n);
+asmlinkage void *memset(void *s, int c, size_t n);
+asmlinkage void *memcpy(void *dest, const void *src, size_t n);
 
 #ifdef CONFIG_X86_64
 #define memptr long
@@ -222,7 +222,7 @@ void __putstr(const char *s)
 	outb(0xff & (pos >> 1), vidport+1);
 }
 
-void *memset(void *s, int c, size_t n)
+asmlinkage void *memset(void *s, int c, size_t n)
 {
 	int i;
 	char *ss = s;
@@ -232,7 +232,7 @@ void *memset(void *s, int c, size_t n)
 	return s;
 }
 #ifdef CONFIG_X86_32
-void *memcpy(void *dest, const void *src, size_t n)
+asmlinkage void *memcpy(void *dest, const void *src, size_t n)
 {
 	int d0, d1, d2;
 	asm volatile(

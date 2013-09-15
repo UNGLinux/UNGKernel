@@ -229,11 +229,35 @@ void copy_to_fs(addr_t dst, void *src, size_t len);
 void *copy_from_fs(void *dst, addr_t src, size_t len);
 void copy_to_gs(addr_t dst, void *src, size_t len);
 void *copy_from_gs(void *dst, addr_t src, size_t len);
+
+#ifndef __clang__
 void *memcpy(void *dst, void *src, size_t len);
 void *memset(void *dst, int c, size_t len);
 
 #define memcpy(d,s,l) __builtin_memcpy(d,s,l)
 #define memset(d,c,l) __builtin_memset(d,c,l)
+
+#else
+static inline void *memcpy(void *d, const void *s, size_t l)
+{
+	int d0, d1, d2;
+	asm volatile("rep ; addr32 movsb\n\t"
+		     : "=&c" (d0), "=&D" (d1), "=&S" (d2)
+		     : "0" (l), "1" ((long)d), "2" ((long)s)
+		     : "memory");
+	return d;
+}
+
+static inline void *memset(void *d, char c, size_t l)
+{
+	int d0, d1;
+	asm volatile("rep ; addr32 stosb\n\t"
+		     : "=&c" (d0), "=&D" (d1)
+		     : "0" (l), "1" (d), "a" (c)
+		     : "memory");
+	return d;
+}
+#endif
 
 /* a20.c */
 int enable_a20(void);
@@ -350,9 +374,9 @@ int printf(const char *fmt, ...);
 void initregs(struct biosregs *regs);
 
 /* string.c */
-int strcmp(const char *str1, const char *str2);
-int strncmp(const char *cs, const char *ct, size_t count);
-size_t strnlen(const char *s, size_t maxlen);
+asmlinkage int strcmp(const char *str1, const char *str2);
+asmlinkage int strncmp(const char *cs, const char *ct, size_t count);
+asmlinkage size_t strnlen(const char *s, size_t maxlen);
 unsigned int atou(const char *s);
 unsigned long long simple_strtoull(const char *cp, char **endp, unsigned int base);
 
