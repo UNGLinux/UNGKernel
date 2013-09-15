@@ -22,6 +22,15 @@ OBJCOPYFLAGS	:=-O binary -R .comment -S
 GZFLAGS		:=-9
 #KBUILD_CFLAGS	+=-pipe
 
+ifeq ($(COMPILER),clang)
+# Clang options
+KBUILD_CPPFLAGS	+= $(call cc-option,-target $(CROSS_COMPILE:-=),)
+KBUILD_CFLAGS   += $(call cc-option,-fno-builtin,)
+KBUILD_CFLAGS   += $(call cc-disable-warning,asm-operand-widths)
+KBUILD_CFLAGS   += $(call cc-option,-Xassembler,)
+KBUILD_CFLAGS   += $(call cc-option,-mno-warn-deprecated,)
+endif
+
 # Never generate .eh_frame
 KBUILD_CFLAGS	+= $(call cc-option,-fno-dwarf2-cfi-asm)
 
@@ -44,11 +53,11 @@ KBUILD_CFLAGS	+=-fstack-protector
 endif
 
 ifeq ($(CONFIG_CPU_BIG_ENDIAN),y)
-KBUILD_CPPFLAGS	+= -mbig-endian
+KBUILD_CPPFLAGS	+= $(call cc-option,-mbig-endian,)
 AS		+= -EB
 LD		+= -EB
 else
-KBUILD_CPPFLAGS	+= -mlittle-endian
+KBUILD_CPPFLAGS	+= $(call cc-option,-mlittle-endian,)
 AS		+= -EL
 LD		+= -EL
 endif
@@ -99,7 +108,11 @@ tune-$(CONFIG_CPU_V6K)		=$(call cc-option,-mtune=arm1136j-s,-mtune=strongarm)
 tune-y := $(tune-y)
 
 ifeq ($(CONFIG_AEABI),y)
-CFLAGS_ABI	:=-mabi=aapcs-linux -mno-thumb-interwork
+ifeq ($(COMPILER),clang)
+CFLAGS_ABI	:=
+else
+CFLAGS_ABI	:=-mabi=aapcs-linux $(call cc-option,-mno-thumb-interwork,)
+endif
 else
 CFLAGS_ABI	:=$(call cc-option,-mapcs-32,-mabi=apcs-gnu) $(call cc-option,-mno-thumb-interwork,)
 endif
@@ -123,7 +136,11 @@ AFLAGS_ISA	:=$(CFLAGS_ISA)
 endif
 
 # Need -Uarm for gcc < 3.x
+ifeq ($(COMPILER),clang)
+KBUILD_CFLAGS	+=$(CFLAGS_ABI) $(CFLAGS_THUMB2) $(arch-y) $(tune-y) -msoft-float
+else
 KBUILD_CFLAGS	+=$(CFLAGS_ABI) $(CFLAGS_ISA) $(arch-y) $(tune-y) $(call cc-option,-mshort-load-bytes,$(call cc-option,-malignment-traps,)) -msoft-float -Uarm
+endif
 KBUILD_AFLAGS	+=$(CFLAGS_ABI) $(AFLAGS_ISA) $(arch-y) $(tune-y) -include asm/unified.h -msoft-float
 
 CHECKFLAGS	+= -D__arm__
