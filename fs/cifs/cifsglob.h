@@ -118,7 +118,6 @@ struct session_key {
 /* crypto security descriptor definition */
 struct sdesc {
 	struct shash_desc shash;
-	char ctx[];
 };
 
 /* crypto hashing related structure/fields, not specific to a sec mech */
