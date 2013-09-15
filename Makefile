@@ -166,7 +166,6 @@ export srctree objtree VPATH
 # SUBARCH is subsequently ignored.
 
 SUBARCH := $(shell uname -m | sed -e s/i.86/x86/ -e s/x86_64/x86/ \
-				  -e s/sun4u/sparc64/ \
 				  -e s/arm.*/arm/ -e s/sa110/arm/ \
 				  -e s/s390x/s390/ -e s/parisc64/parisc/ \
 				  -e s/ppc.*/powerpc/ -e s/mips.*/mips/ \
@@ -198,6 +197,8 @@ CROSS_COMPILE	?= $(CONFIG_CROSS_COMPILE:"%"=%)
 # Architecture as present in compile.h
 UTS_MACHINE 	:= $(ARCH)
 SRCARCH 	:= $(ARCH)
+BROKEN = "Error, this platform is not supported with clang"
+export BROKEN
 
 # Additional ARCH settings for x86
 ifeq ($(ARCH),i386)
@@ -209,23 +210,28 @@ endif
 
 # Additional ARCH settings for sparc
 ifeq ($(ARCH),sparc32)
-       SRCARCH := sparc
+       echo $(BROKEN)
+       exit
 endif
 ifeq ($(ARCH),sparc64)
-       SRCARCH := sparc
+       echo $(BROKEN)
+       exit
 endif
 
 # Additional ARCH settings for sh
 ifeq ($(ARCH),sh64)
-       SRCARCH := sh
+       echo $(BROKEN)
+       exit
 endif
 
 # Additional ARCH settings for tile
 ifeq ($(ARCH),tilepro)
-       SRCARCH := tile
+       echo $(BROKEN)
+       exit
 endif
 ifeq ($(ARCH),tilegx)
-       SRCARCH := tile
+       echo $(BROKEN)
+       exit
 endif
 
 # Where to locate arch specific headers
