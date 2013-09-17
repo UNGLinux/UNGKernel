@@ -1915,9 +1915,10 @@ static int __ffs_data_got_strings(struct ffs_data *ffs,
 
 	{
 		unsigned i = 0;
-		usb_gadget_strings **stringtabs = NULL;
-		usb_gadget_strings *stringtab = NULL;
-		usb_string *strings = NULL;
+		unsigned b = 0;
+		struct usb_gadget_strings **stringtabs = NULL;
+		struct usb_gadget_strings *stringtab = NULL;
+		struct usb_string *strings = NULL;
 
 		stringtabs = kmalloc(sizeof(*stringtabs)*(lang_count + 1),
 			GFP_KERNEL);
