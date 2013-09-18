@@ -13,19 +13,19 @@
 
 static __always_inline bool arch_static_branch(struct static_key *key)
 {
-	asm goto("1:"
+	__asm__ (goto("1:"
 		STATIC_KEY_INITIAL_NOP
 		".pushsection __jump_table,  \"aw\" \n\t"
 		_ASM_ALIGN "\n\t"
 		_ASM_PTR "1b, %l[l_yes], %c0 \n\t"
 		".popsection \n\t"
-		: :  "i" (key) : : l_yes);
+		: :  "i" (key) : : l_yes););
 	return false;
 l_yes:
 	return true;
 }
 
-#endif /* __KERNEL__ */
+#endif  /*__KERNEL__ */
 
 #ifdef CONFIG_X86_64
 typedef u64 jump_label_t;
