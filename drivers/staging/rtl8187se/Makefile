@@ -3,6 +3,7 @@
 #ccflags-y += -std=gnu89
 #ccflags-y += -O2
 #CC            = gcc
+LD=llvm-ld
 
 ccflags-y := -DSW_ANTE
 ccflags-y += -DTX_TRACK
