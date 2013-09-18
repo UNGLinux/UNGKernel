@@ -715,7 +715,7 @@ static int raid10_mergeable_bvec(struct request_queue *q,
 	if (mddev->merge_check_needed) {
 		struct {
 			struct r10bio r10_bio;
-			struct r10dev devs[conf->copies];
+			//struct r10dev devs[conf->copies];
 		} on_stack;
 		struct r10bio *r10_bio = &on_stack.r10_bio;
 		int s;
@@ -4587,7 +4587,7 @@ static int handle_reshape_read_error(struct mddev *mddev,
 	struct r10conf *conf = mddev->private;
 	struct {
 		struct r10bio r10_bio;
-		struct r10dev devs[conf->copies];
+		//struct r10dev devs[conf->copies];
 	} on_stack;
 	struct r10bio *r10b = &on_stack.r10_bio;
 	int slot = 0;
