@@ -1,0 +1,68 @@
+--- Kconfig
++++ Kconfig
+@@ -78,6 +78,7 @@
+ source "net/ipv4/Kconfig"
+ source "net/ipv6/Kconfig"
+ source "net/netlabel/Kconfig"
++source "net/mptcp/Kconfig"
+ 
+ endif # if INET
+ 
+--- Kconfig
++++ Kconfig
+@@ -577,6 +577,22 @@
+ 	For further details see:
+ 	  http://www.ews.uiuc.edu/~shaoliu/tcpillinois/index.html
+ 
++config TCP_CONG_COUPLED
++	tristate "MPTCP COUPLED CONGESTION CONTROL"
++	depends on MPTCP
++	default n
++	---help---
++	MultiPath TCP Coupled Congestion Control
++	To enable it, just put 'coupled' in tcp_congestion_control
++
++config TCP_CONG_OLIA
++	tristate "MPTCP Opportunistic Linked Increase"
++	depends on MPTCP
++	default n
++	---help---
++	MultiPath TCP Opportunistic Linked Increase Congestion Control
++	To enable it, just put 'olia' in tcp_congestion_control
++
+ choice
+ 	prompt "Default TCP congestion control"
+ 	default DEFAULT_CUBIC
+@@ -605,6 +621,12 @@
+ 	config DEFAULT_WESTWOOD
+ 		bool "Westwood" if TCP_CONG_WESTWOOD=y
+ 
++	config DEFAULT_COUPLED
++		bool "Coupled" if TCP_CONG_COUPLED=y
++
++	config DEFAULT_OLIA
++		bool "Olia" if TCP_CONG_OLIA=y
++
+ 	config DEFAULT_RENO
+ 		bool "Reno"
+ 
+@@ -626,6 +648,7 @@
+ 	default "vegas" if DEFAULT_VEGAS
+ 	default "westwood" if DEFAULT_WESTWOOD
+ 	default "veno" if DEFAULT_VENO
++	default "coupled" if DEFAULT_COUPLED
+ 	default "reno" if DEFAULT_RENO
+ 	default "cubic"
+ 
+--- /dev/null
++++ Kconfig
+@@ -0,0 +1,9 @@
++#
++# MPTCP configuration
++#
++config MPTCP
++        bool "MPTCP protocol"
++        depends on !SYN_COOKIES && !TCP_MD5SIG && (IPV6=y || IPV6=n)
++        ---help---
++          This replaces the normal TCP stack with a Multipath TCP stack,
++          able to use several paths at once.

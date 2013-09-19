@@ -1,0 +1,87 @@
+--- tcp_input.c
++++ tcp_input.c
+@@ -3410,6 +3407,18 @@
+ 	previous_packets_out = tp->packets_out;
+ 	flag |= tcp_clean_rtx_queue(sk, prior_fackets, prior_snd_una);
+ 
++	if (tp->mpc) {
++		flag |= mptcp_fallback_infinite(sk, flag);
++
++		if (flag & MPTCP_FLAG_SEND_RESET) {
++			pr_err("%s resetting flow\n", __func__);
++			mptcp_send_reset(sk);
++			goto invalid_ack;
++		}
++
++		mptcp_clean_rtx_infinite(skb, sk);
++	}
++
+ 	pkts_acked = previous_packets_out - tp->packets_out;
+ 
+ 	if (tcp_ack_is_dubious(sk, flag)) {
+@@ -3623,8 +3637,8 @@
+ 		if (tcp_parse_aligned_timestamp(tp, th))
+ 			return true;
+ 	}
+-
+-	tcp_parse_options(skb, &tp->rx_opt, 1, NULL);
++	tcp_parse_options(skb, &tp->rx_opt, tp->mpc ? &tp->mptcp->rx_opt : NULL,
++			  1, NULL);
+ 	if (tp->rx_opt.saw_tstamp)
+ 		tp->rx_opt.rcv_tsecr -= tp->tsoffset;
+ 
+@@ -3793,6 +3807,8 @@
+ 	case TCP_ESTABLISHED:
+ 		/* Move to CLOSE_WAIT */
+ 		tcp_set_state(sk, TCP_CLOSE_WAIT);
++		if (tp->mpc)
++			mptcp_sub_close_passive(sk);
+ 		inet_csk(sk)->icsk_ack.pingpong = 1;
+ 		break;
+ 
+@@ -5492,8 +5624,11 @@
+ 	struct tcp_sock *tp = tcp_sk(sk);
+ 	struct tcp_fastopen_cookie foc = { .len = -1 };
+ 	int saved_clamp = tp->rx_opt.mss_clamp;
++	struct mptcp_options_received mopt;
++	mptcp_init_mp_opt(&mopt);
+ 
+-	tcp_parse_options(skb, &tp->rx_opt, 0, &foc);
++	tcp_parse_options(skb, &tp->rx_opt,
++			  tp->mpc ? &tp->mptcp->rx_opt : &mopt, 0, &foc);
+ 	if (tp->rx_opt.saw_tstamp)
+ 		tp->rx_opt.rcv_tsecr -= tp->tsoffset;
+ 
+@@ -5876,6 +6052,8 @@
+ 
+ 				if (tp->rx_opt.tstamp_ok)
+ 					tp->advmss -= TCPOLEN_TSTAMP_ALIGNED;
++				if (tp->mpc)
++					tp->advmss -= MPTCP_SUB_LEN_DSM_ALIGN;
+ 
+ 				if (req) {
+ 					/* Re-arm the timer because data may
+@@ -5899,6 +6077,13 @@
+ 
+ 				tcp_initialize_rcv_mss(sk);
+ 				tcp_fast_path_on(tp);
++
++				/* Send an ACK when establishing a new
++				 * MPTCP subflow, i.e. using an MP_JOIN
++				 * subtype.
++				 */
++				if (tp->mpc && !is_master_tp(tp))
++					tcp_send_ack(sk);
+ 			} else {
+ 				return 1;
+ 			}
+@@ -5950,7 +6135,8 @@
+ 					tmo = tcp_fin_time(sk);
+ 					if (tmo > TCP_TIMEWAIT_LEN) {
+ 						inet_csk_reset_keepalive_timer(sk, tmo - TCP_TIMEWAIT_LEN);
+-					} else if (th->fin || sock_owned_by_user(sk)) {
++					} else if (th->fin || mptcp_is_data_fin(skb) ||
++						   sock_owned_by_user(sk)) {
+ 						/* Bad case. We could lose such FIN otherwise.
+ 						 * It is not a big problem, but it looks confusing
+ 						 * and not so rare event. We still can lose it now,
