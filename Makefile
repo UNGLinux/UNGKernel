@@ -1,6 +1,6 @@
 VERSION = 3
 PATCHLEVEL = 11
-SUBLEVEL = 1
+SUBLEVEL = 6
 EXTRAVERSION =
 NAME = Linux for Workgroups
 
