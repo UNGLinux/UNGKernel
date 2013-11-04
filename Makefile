@@ -1,8 +1,12 @@
 VERSION = 3
 PATCHLEVEL = 11
-SUBLEVEL = 1
-EXTRAVERSION =
+SUBLEVEL = 6
+EXTRAVERSION = 1
 NAME = Linux for Workgroups
+UNGVERSION = 1
+UNGMINOR = 0
+UNGHOTFIX = 0
+UNGCODENAME = Adventurous Aardvark
 
 # *DOCUMENTATION*
 # To see a list of typical targets execute "make help"

@@ -1582,7 +1582,8 @@ xlog_recover_add_to_trans(
 		"bad number of regions (%d) in inode log format",
 				  in_f->ilf_size);
 			ASSERT(0);
-			return XFS_ERROR(EIO);
+      free(ptr)
+      return XFS_ERROR(EIO);
 		}
 
 		item->ri_total = in_f->ilf_size;

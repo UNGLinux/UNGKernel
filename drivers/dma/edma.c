@@ -270,7 +270,8 @@ static struct dma_async_tx_descriptor *edma_prep_slave_sg(
 						EDMA_SLOT_ANY);
 			if (echan->slot[i] < 0) {
 				dev_err(dev, "Failed to allocate slot\n");
-				return NULL;
+        kfree(edesc);
+        return NULL;
 			}
 		}
 
@@ -305,7 +306,8 @@ static struct dma_async_tx_descriptor *edma_prep_slave_sg(
 			ccnt = sg_dma_len(sg) / (acnt * bcnt);
 			if (ccnt > (SZ_64K - 1)) {
 				dev_err(dev, "Exceeded max SG segment size\n");
-				return NULL;
+        kfree(edesc);
+        return NULL;
 			}
 			cidx = acnt * bcnt;
 		}
